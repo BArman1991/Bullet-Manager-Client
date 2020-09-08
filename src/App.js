@@ -5,7 +5,7 @@ import CreateTeam from './components/createTeam'
 import EditTeam from './components/EditTeam'
 import ListAllTeams from './components/ListAllTeams'
 
-function App() {
+function App(){
   return (
     <Fragment>
       <div className='container'>
