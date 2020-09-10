@@ -10,7 +10,6 @@ import Register from './components/Register'
 import Login from './components/Login'
 
 function App(){
-
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const setAuth = boolean => {
     setIsAuthenticated(boolean)
