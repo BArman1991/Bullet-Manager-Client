@@ -1,78 +1,175 @@
-import React, { Fragment, useState } from "react";
-import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
+import React, { useState, useRef } from "react";
+import Form from "react-validation/build/form";
+import Input from "react-validation/build/input";
+import CheckButton from "react-validation/build/button";
+import { isEmail } from "validator";
 
-const Register = ({ setAuth }) => {
-  const [inputs, setInputs] = useState({
-    email: "",
-    password: "",
-    name: "",
-  });
+import AuthService from "../services/auth.service";
 
-  const onChange = (e) => {
-    setInputs({ ...inputs, [e.target.name]: e.target.value });
+const required = (value) => {
+  if (!value) {
+    return (
+      <div className="alert alert-danger" role="alert">
+        This field is required!
+      </div>
+    );
+  }
+};
+
+const validEmail = (value) => {
+  if (!isEmail(value)) {
+    return (
+      <div className="alert alert-danger" role="alert">
+        This is not a valid email.
+      </div>
+    );
+  }
+};
+
+const vusername = (value) => {
+  if (value.length < 3 || value.length > 20) {
+    return (
+      <div className="alert alert-danger" role="alert">
+        The username must be between 3 and 20 characters.
+      </div>
+    );
+  }
+};
+
+const vpassword = (value) => {
+  if (value.length < 6 || value.length > 40) {
+    return (
+      <div className="alert alert-danger" role="alert">
+        The password must be between 6 and 40 characters.
+      </div>
+    );
+  }
+};
+
+const Register = (props) => {
+  const form = useRef();
+  const checkBtn = useRef();
+
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [successful, setSuccessful] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const onChangeUsername = (e) => {
+    const username = e.target.value;
+    setUsername(username);
   };
 
-  const onSubmitForm = async (e) => {
+  const onChangeEmail = (e) => {
+    const email = e.target.value;
+    setEmail(email);
+  };
+
+  const onChangePassword = (e) => {
+    const password = e.target.value;
+    setPassword(password);
+  };
+
+  const handleRegister = (e) => {
     e.preventDefault();
 
-    try {
-      const body = { email, password, name };
+    setMessage("");
+    setSuccessful(false);
 
-      const response = await fetch("http://localhost:5000/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+    form.current.validateAll();
 
-      const parseResponse = await response.json();
+    if (checkBtn.current.context._errors.length === 0) {
+      AuthService.register(username, email, password).then(
+        (response) => {
+          setMessage(response.data.message);
+          setSuccessful(true);
+        },
+        (error) => {
+          const resMessage =
+            (error.response &&
+              error.response.data &&
+              error.response.data.message) ||
+            error.message ||
+            error.toString();
 
-      if (parseResponse.token) {
-        localStorage.setItem("token", parseResponse.token);
-        setAuth(true);
-        toast.success("Registered successfully");
-      } else {
-        setAuth(false);
-        toast.error(parseResponse);
-      }
-    } catch (err) {
-      console.error(err.mesage);
+          setMessage(resMessage);
+          setSuccessful(false);
+        }
+      );
     }
   };
 
-  const { email, password, name } = inputs;
   return (
-    <Fragment>
-      <h1 className="text-center my-5">Register</h1>
-      <form onSubmit={onSubmitForm}>
-        <input
-          type="email"
-          name="email"
-          placeholder="email"
-          className="form-control my-3"
-          value={email}
-          onChange={(e) => onChange(e)}
+    <div className="col-md-12">
+      <div className="card card-container">
+        <img
+          src="//ssl.gstatic.com/accounts/ui/avatar_2x.png"
+          alt="profile-img"
+          className="profile-img-card"
         />
-        <input
-          type="password"
-          name="password"
-          placeholder="password"
-          className="form-control my-3"
-          value={password}
-          onChange={(e) => onChange(e)}
-        />
-        <input
-          type="text"
-          name="name"
-          placeholder="name"
-          className="form-control my-3"
-          value={name}
-          onChange={(e) => onChange(e)}
-        />
-        <button className="btn btn-success btn-block">Submit</button>
-      </form>
-      <Link to="/login">Login</Link>
-    </Fragment>
+
+        <Form onSubmit={handleRegister} ref={form}>
+          {!successful && (
+            <div>
+              <div className="form-group">
+                <label htmlFor="username">Username</label>
+                <Input
+                  type="text"
+                  className="form-control"
+                  name="username"
+                  value={username}
+                  onChange={onChangeUsername}
+                  validations={[required, vusername]}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="email">Email</label>
+                <Input
+                  type="text"
+                  className="form-control"
+                  name="email"
+                  value={email}
+                  onChange={onChangeEmail}
+                  validations={[required, validEmail]}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="password">Password</label>
+                <Input
+                  type="password"
+                  className="form-control"
+                  name="password"
+                  value={password}
+                  onChange={onChangePassword}
+                  validations={[required, vpassword]}
+                />
+              </div>
+
+              <div className="form-group">
+                <button className="btn btn-primary btn-block">Sign Up</button>
+              </div>
+            </div>
+          )}
+
+          {message && (
+            <div className="form-group">
+              <div
+                className={
+                  successful ? "alert alert-success" : "alert alert-danger"
+                }
+                role="alert"
+              >
+                {message}
+              </div>
+            </div>
+          )}
+          <CheckButton style={{ display: "none" }} ref={checkBtn} />
+        </Form>
+      </div>
+    </div>
   );
 };
 

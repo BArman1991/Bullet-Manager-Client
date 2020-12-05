@@ -1,96 +1,120 @@
-import React, { Fragment, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { Switch, Route, Link } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import AuthService from "./services/auth.service";
 
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Redirect,
-} from "react-router-dom";
-
-import CreateTeam from "./components/createTeam";
-import EditTeam from "./components/EditTeam";
-import ListAllTeams from "./components/ListAllTeams";
-import Dashboard from "./components/Dashboard";
-import Register from "./components/Register";
 import Login from "./components/Login";
+import Register from "./components/Register";
+import Home from "./components/Home";
+import Profile from "./components/Profile";
+import BoardUser from "./components/BoardUser";
+import BoardModerator from "./components/BoardModerator";
+import BoardAdmin from "./components/BoardAdmin";
 
-toast.configure();
-
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const setAuth = (boolean) => {
-    setIsAuthenticated(boolean);
-  };
-
-  async function isAuth() {
-    try {
-      const response = await fetch("http://localhost:5000/auth/is-verify", {
-        method: "GET",
-        headers: { token: localStorage.token },
-      });
-
-      const parseResponse = await response.json();
-      parseResponse === true
-        ? setIsAuthenticated(true)
-        : setIsAuthenticated(false);
-    } catch (err) {
-      console.error(err.message);
-    }
-  }
+const App = () => {
+  const [showModeratorBoard, setShowModeratorBoard] = useState(false);
+  const [showAdminBoard, setShowAdminBoard] = useState(false);
+  const [currentUser, setCurrentUser] = useState(undefined);
 
   useEffect(() => {
-    isAuth();
-  });
+    const user = AuthService.getCurrentUser();
+
+    if (user) {
+      setCurrentUser(user);
+      setShowModeratorBoard(user.roles.includes("ROLE_MODERATOR"));
+      setShowAdminBoard(user.roles.includes("ROLE_ADMIN"));
+    }
+  }, []);
+
+  const logOut = () => {
+    AuthService.logout();
+  };
 
   return (
-    <Fragment>
-      <Router>
-        <div className="container">
-          <Switch>
-            <Route
-              exact
-              path="/login"
-              render={(props) =>
-                !isAuthenticated ? (
-                  <Login {...props} setAuth={setAuth} />
-                ) : (
-                  <Redirect to="/dashboard" />
-                )
-              }
-            />
-            <Route
-              exact
-              path="/register"
-              render={(props) =>
-                !isAuthenticated ? (
-                  <Register {...props} setAuth={setAuth} />
-                ) : (
-                  <Redirect to="login" />
-                )
-              }
-            />
-            <Route
-              exact
-              path="/dashboard"
-              render={(props) =>
-                isAuthenticated ? (
-                  <Dashboard {...props} setAuth={setAuth} />
-                ) : (
-                  <Redirect to="login" />
-                )
-              }
-            />
-          </Switch>
-          {/*<CreateTeam />
-          <ListAllTeams />*/}
+    <div>
+      <nav className="navbar navbar-expand navbar-dark bg-dark">
+        <Link to={"/"} className="navbar-brand">
+          bezKoder
+        </Link>
+        <div className="navbar-nav mr-auto">
+          <li className="nav-item">
+            <Link to={"/home"} className="nav-link">
+              Home
+            </Link>
+          </li>
+
+          {showModeratorBoard && (
+            <li className="nav-item">
+              <Link to={"/mod"} className="nav-link">
+                Moderator Board
+              </Link>
+            </li>
+          )}
+
+          {showAdminBoard && (
+            <li className="nav-item">
+              <Link to={"/admin"} className="nav-link">
+                Admin Board
+              </Link>
+            </li>
+          )}
+
+          {currentUser && (
+            <li className="nav-item">
+              <Link to={"/user"} className="nav-link">
+                User
+              </Link>
+            </li>
+          )}
         </div>
-      </Router>
-    </Fragment>
+
+        {currentUser ? (
+          <div className="navbar-nav ml-auto">
+            <li className="nav-item">
+              <Link to={"/profile"} className="nav-link">
+                {currentUser.username}
+              </Link>
+            </li>
+            <li className="nav-item">
+              <a href="/login" className="nav-link" onClick={logOut}>
+                LogOut
+              </a>
+            </li>
+          </div>
+        ) : (
+          <div className="navbar-nav ml-auto">
+            <li className="nav-item">
+              <Link to={"/login"} className="nav-link">
+                Login
+              </Link>
+            </li>
+
+            <li className="nav-item">
+              <Link to={"/register"} className="nav-link">
+                Sign Up
+              </Link>
+            </li>
+          </div>
+        )}
+      </nav>
+
+      <div className="container mt-3">
+        <Switch>
+          <Route exact path={["/", "/home"]} component={Home} />
+          <Route exact path="/login" component={Login} />
+          <Route exact path="/register" component={Register} />
+          <Route exact path="/profile" component={Profile} />
+          <Route path="/user" component={BoardUser} />
+          <Route path="/mod" component={BoardModerator} />
+          <Route path="/admin" component={BoardAdmin} />
+        </Switch>
+      </div>
+    </div>
   );
-}
+};
 
 export default App;
+
+

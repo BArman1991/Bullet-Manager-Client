@@ -1,69 +1,124 @@
-import React, { Fragment, useState } from "react";
-import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
+import React, { useState, useRef } from "react";
+import Form from "react-validation/build/form";
+import Input from "react-validation/build/input";
+import CheckButton from "react-validation/build/button";
 
-const Login = ({ setAuth }) => {
-  const [inputs, setInputs] = useState({
-    email: "",
-    password: "",
-  });
+import AuthService from "../services/auth.service";
 
-  const { email, password } = inputs;
+const required = (value) => {
+  if (!value) {
+    return (
+      <div className="alert alert-danger" role="alert">
+        This field is required!
+      </div>
+    );
+  }
+};
 
-  const onChange = (e) => {
-    setInputs({ ...inputs, [e.target.name]: e.target.value });
+const Login = (props) => {
+  const form = useRef();
+  const checkBtn = useRef();
+
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const onChangeUsername = (e) => {
+    const username = e.target.value;
+    setUsername(username);
   };
 
-  const onSubmitForm = async (e) => {
+  const onChangePassword = (e) => {
+    const password = e.target.value;
+    setPassword(password);
+  };
+
+  const handleLogin = (e) => {
     e.preventDefault();
 
-    try {
-      const body = { email, password };
-      const response = await fetch("http://localhost:5000/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+    setMessage("");
+    setLoading(true);
 
-      const parseResponse = await response.json();
+    form.current.validateAll();
 
-      if (parseResponse.token) {
-        localStorage.setItem("token", parseResponse.token);
-        setAuth(true);
-        toast.success("login successfully");
-      } else {
-        setAuth(false);
-        toast.error(parseResponse);
-      }
-    } catch (err) {
-      console.error(err.mesage);
+    if (checkBtn.current.context._errors.length === 0) {
+      AuthService.login(username, password).then(
+        () => {
+          props.history.push("/profile");
+          window.location.reload();
+        },
+        (error) => {
+          const resMessage =
+            (error.response &&
+              error.response.data &&
+              error.response.data.message) ||
+            error.message ||
+            error.toString();
+
+          setLoading(false);
+          setMessage(resMessage);
+        }
+      );
+    } else {
+      setLoading(false);
     }
   };
 
   return (
-    <Fragment>
-      <h1 className="text-center my-5">Login</h1>
-      <form onSubmit={onSubmitForm}>
-        <input
-          type="email"
-          name="email"
-          value={email}
-          onChange={(e) => onChange(e)}
-          placeholder="email"
-          className="form-control my-3"
+    <div className="col-md-12">
+      <div className="card card-container">
+        <img
+          src="//ssl.gstatic.com/accounts/ui/avatar_2x.png"
+          alt="profile-img"
+          className="profile-img-card"
         />
-        <input
-          type="password"
-          name="password"
-          value={password}
-          onChange={(e) => onChange(e)}
-          placeholder="password"
-          className="form-control my-3"
-        />
-        <button className="btn btn-success btn-block">Login</button>
-      </form>
-      <Link to="/register">Register</Link>
-    </Fragment>
+
+        <Form onSubmit={handleLogin} ref={form}>
+          <div className="form-group">
+            <label htmlFor="username">Username</label>
+            <Input
+              type="text"
+              className="form-control"
+              name="username"
+              value={username}
+              onChange={onChangeUsername}
+              validations={[required]}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <Input
+              type="password"
+              className="form-control"
+              name="password"
+              value={password}
+              onChange={onChangePassword}
+              validations={[required]}
+            />
+          </div>
+
+          <div className="form-group">
+            <button className="btn btn-primary btn-block" disabled={loading}>
+              {loading && (
+                <span className="spinner-border spinner-border-sm"></span>
+              )}
+              <span>Login</span>
+            </button>
+          </div>
+
+          {message && (
+            <div className="form-group">
+              <div className="alert alert-danger" role="alert">
+                {message}
+              </div>
+            </div>
+          )}
+          <CheckButton style={{ display: "none" }} ref={checkBtn} />
+        </Form>
+      </div>
+    </div>
   );
 };
 
