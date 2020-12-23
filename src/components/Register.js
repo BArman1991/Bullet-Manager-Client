@@ -103,8 +103,8 @@ const Register = (props) => {
   return (
     <div className="col-md-12">
       <div className="card card-container">
-        <img
-          src="//ssl.gstatic.com/accounts/ui/avatar_2x.png"
+      <img
+          src="/Bullet.png"
           alt="profile-img"
           className="profile-img-card"
         />
@@ -149,7 +149,7 @@ const Register = (props) => {
               </div>
 
               <div className="form-group">
-                <button className="btn btn-primary btn-block">Sign Up</button>
+                <button className="btn btn-dark btn-block">Sign Up</button>
               </div>
             </div>
           )}

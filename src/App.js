@@ -12,6 +12,7 @@ import Profile from "./components/Profile";
 import BoardUser from "./components/BoardUser";
 import BoardModerator from "./components/BoardModerator";
 import BoardAdmin from "./components/BoardAdmin";
+import styled from "styled-components";
 
 const App = () => {
   const [showModeratorBoard, setShowModeratorBoard] = useState(false);
@@ -33,6 +34,7 @@ const App = () => {
   };
 
   return (
+    <MainWrapper>
     <div>
       <nav className="navbar navbar-expand navbar-dark bg-dark">
         <Link to={"/"} className="navbar-brand">
@@ -112,9 +114,16 @@ const App = () => {
         </Switch>
       </div>
     </div>
+    </MainWrapper>
   );
 };
 
 export default App;
 
+const MainWrapper = styled.div`
+/* background-color: green; */
+background-color: #fffefc;
+
+/* height: 100vh; */
+`
 

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 
 import UserService from "../services/user.service";
+import styled from "styled-components";
+
 
 const Home = () => {
   const [content, setContent] = useState("");
@@ -22,12 +24,18 @@ const Home = () => {
   }, []);
 
   return (
+    <Wrapper>
     <div className="container">
       <header className="jumbotron">
         <h3>{content}</h3>
       </header>
     </div>
+    </Wrapper>
   );
 };
 
 export default Home;
+
+const Wrapper = styled.div`
+
+`
